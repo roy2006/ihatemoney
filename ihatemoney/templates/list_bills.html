@@ -141,6 +141,10 @@
                         {{ csrf_form.csrf_token }}
                         <button class="action delete" type="submit" title="{{ _("delete") }}"></button>
                     </form>
+                    <form action="{{ url_for(".duplicate_bill", bill_id=bill.id) }}" method="POST">
+                        {{ csrf_form.csrf_token }}
+                        <button class="action duplicate" type="submit" title="{{ _("duplicate") }}"></button>
+                    </form>
                     {% if bill.external_link %}
                     <a class="show" href="{{ bill.external_link }}" ref="noopener" target="_blank" title="{{ _("show") }}">{{ _('show') }} </a>
                     {% endif %}

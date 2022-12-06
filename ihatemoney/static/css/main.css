@@ -294,6 +294,7 @@ footer .footer-left {
   text-align: center;
 }
 
+.bill-actions > form > .duplicate,
 .bill-actions > form > .delete,
 .bill-actions > .edit,
 .bill-actions > .show {
@@ -316,6 +317,10 @@ footer .footer-left {
 
 .bill-actions > form > .delete {
   background: url("../images/delete.png") no-repeat right;
+}
+
+.bill-actions > form > .duplicate {
+  background: url("../images/duplicate.png") no-repeat right;
 }
 
 .bill-actions > .edit {

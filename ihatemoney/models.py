@@ -705,6 +705,18 @@ class Bill(db.Model):
             self.amount, self.original_currency, project_default_currency
         )
 
+    def duplicate(self):
+        dup_bill = Bill(
+            amount=self.amount,
+            external_link=self.external_link,
+            original_currency=self.original_currency,
+            owers=self.owers.copy(),
+            payer_id=self.payer_id,
+            what=self.what + " (duplicated)",
+            project_default_currency=g.project.default_currency,
+        )
+        return dup_bill
+
     @property
     def _to_serialize(self):
         return {

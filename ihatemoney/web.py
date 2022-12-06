@@ -768,6 +768,26 @@ def delete_bill(bill_id):
     return redirect(url_for(".list_bills"))
 
 
+@main.route("/<project_id>/duplicate/<int:bill_id>", methods=["POST"])
+def duplicate_bill(bill_id):
+    # Used for CSRF validation
+    form = EmptyForm()
+    if not form.validate():
+        flash(format_form_errors(form, _("Error deleting bill")), category="danger")
+        return redirect(url_for(".list_bills"))
+
+    bill = Bill.query.get(g.project, bill_id)
+    if not bill:
+        return redirect(url_for(".list_bills"))
+
+    duplicate_bill = bill.duplicate()
+    db.session.add(duplicate_bill)
+    db.session.commit()
+    flash(_("Bill duplicated"))
+
+    return redirect(url_for(".list_bills"))
+
+
 @main.route("/<project_id>/settle_debt", methods=["POST"])
 def settle_debt():
     # Used for CSRF validation

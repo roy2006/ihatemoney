@@ -757,6 +757,37 @@ class BudgetTestCase(IhatemoneyTestCase):
         )
         self.assertIn("Invalid URL", resp.data.decode("utf-8"))
 
+    def test_duplicate_bill(self):
+        self.post_project("raclette")
+        # add two participants
+        self.client.post("/raclette/members/add", data={"name": "zorglub"})
+        self.client.post("/raclette/members/add", data={"name": "tata"})
+
+        members_ids = [m.id for m in self.get_project("raclette").members]
+
+        # test balance
+        self.client.post(
+            "/raclette/add",
+            data={
+                "date": "2011-08-10",
+                "what": "fromage à raclette",
+                "payer": members_ids[0],
+                "payed_for": members_ids,
+                "amount": "100",
+            },
+        )
+        p = self.get_project("raclette")
+        assert len(p.get_bills().all()) == 1
+
+        bill_id = p.get_bills().first().id
+        self.client.post(f"/raclette/duplicate/{bill_id}", data={})
+
+        all_bills = p.get_bills().all()
+        assert len(all_bills) == 2
+
+        assert "duplicate" in all_bills[0].what
+        assert all_bills[0].amount == all_bills[1].amount
+
     def test_weighted_balance(self):
         self.post_project("raclette")
 

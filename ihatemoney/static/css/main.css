@@ -288,6 +288,7 @@ footer .footer-left {
   color: #fff;
 }
 
+/* .settle-actions, */
 .bill-actions {
   padding-top: 10px;
   text-align: center;
@@ -304,6 +305,13 @@ footer .footer-left {
   margin-left: 5px;
   float: left;
   border: none;
+}
+
+.settle-actions > form > .settle{
+  background: url("../images/settle_bill.png") left no-repeat;
+  padding-left: 20px; 
+  border: none;
+  align-content: center;
 }
 
 .bill-actions > form > .delete {

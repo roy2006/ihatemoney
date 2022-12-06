@@ -766,6 +766,26 @@ def delete_bill(bill_id):
 
     return redirect(url_for(".list_bills"))
 
+@main.route("/<project_id>/settle_debt", methods=["POST"])
+def settle_debt():
+    # Used for CSRF validation
+    form = EmptyForm()
+    if not form.validate():
+        flash(format_form_errors(form, _("Error deleting bill")), category="danger")
+        return redirect(url_for(".settle_bill"))
+
+    ower_id = int(request.form.get("ower_id"))   # type: ignore
+    receiver_id = request.form.get("receiver_id")
+    amount = float(request.form.get("amount"))   # type: ignore
+    form = get_billform_for(g.project, set_default=False)
+
+    bill_owers = Person.query.get_by_ids([receiver_id], g.project)
+
+    settlement_bill = Bill(amount=amount,  payer_id = ower_id, owers = bill_owers, what = "Settle Debt")
+    db.session.add(settlement_bill)
+    db.session.commit()
+
+    return redirect(url_for(".settle_bill"))
 
 @main.route("/<project_id>/edit/<int:bill_id>", methods=["GET", "POST"])
 def edit_bill(bill_id):
@@ -802,9 +822,12 @@ def change_lang(lang):
 
 @main.route("/<project_id>/settle_bills")
 def settle_bill():
+    csrf_form = EmptyForm()
+
     """Compute the sum each one have to pay to each other and display it"""
     bills = g.project.get_transactions_to_settle_bill()
-    return render_template("settle_bills.html", bills=bills, current_view="settle_bill")
+    return render_template("settle_bills.html", bills=bills, current_view="settle_bill", 
+        project_id = g.project.id, csrf_form = csrf_form)
 
 
 @main.route("/<project_id>/history")

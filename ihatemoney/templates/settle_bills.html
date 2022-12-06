@@ -1,24 +1,38 @@
-{% extends "sidebar_table_layout.html" %}
+    {% extends "sidebar_table_layout.html" %}
 
-{% block sidebar %}
-    <div id="table_overflow">
-        {{ balance_table(show_weight=False) }}
-    </div>
-{% endblock %}
+    {% block sidebar %}
+        <div id="table_overflow">
+            {{ balance_table(show_weight=False) }}
+        </div>
+    {% endblock %}
 
 
-{% block content %}
-    <table id="bill_table" class="split_bills table table-striped">
-        <thead><tr><th>{{ _("Who pays?") }}</th><th>{{ _("To whom?") }}</th><th>{{ _("How much?") }}</th></tr></thead>
-    <tbody>
-    {% for bill in bills %}
-    <tr receiver={{bill.receiver.id}}>
-            <td>{{ bill.ower }}</td>
-            <td>{{ bill.receiver }}</td>
-            <td>{{ bill.amount|currency }}</td>
-    </tr>
-    {% endfor %}
-    </tbody>
-    </table>
+    {% block content %}
+        <table id="bill_table" class="split_bills table table-striped">
+            <thead><tr>
+                <th>{{ _("Who pays?") }}</th>
+                <th>{{ _("To whom?") }}</th>
+                <th>{{ _("How much?") }}</th>
+                <th>{{ _("Actions") }}</th>
+            </tr></thead>
+        <tbody>
+        {% for bill in bills %}
+        <tr receiver={{bill.receiver.id}}>
+                <td>{{ bill.ower }}</td>
+                <td>{{ bill.receiver }}</td>
+                <td>{{ bill.amount|currency }}</td>
+                <td class="settle-actions">
+                    <form method="POST" action="{{ url_for(".settle_debt") }}">
+                        {{ csrf_form.csrf_token }}
+                        <input type="hidden" name="ower_id" value={{ bill.ower.id }}>
+                        <input type="hidden" name="receiver_id" value={{ bill.receiver.id }}>
+                        <input type="hidden" name="amount" value={{ bill.amount }}>
+                        <button class="action settle" type="submit" title="{{ _("Settle Debt") }}">Settle Debt</button>
+                    </form>
+                </td></td>
+        </tr>
+        {% endfor %}
+        </tbody>
+        </table>
 
-{% endblock %}
+    {% endblock %}

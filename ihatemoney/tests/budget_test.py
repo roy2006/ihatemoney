@@ -23,7 +23,6 @@ class BudgetTestCase(IhatemoneyTestCase):
         """
         # sending a message to one person
         with self.app.mail.record_messages() as outbox:
-
             # create a project
             self.login("raclette")
 
@@ -317,7 +316,6 @@ class BudgetTestCase(IhatemoneyTestCase):
             self.assertEqual(len(models.Project.query.all()), 1)
 
     def test_project_deletion(self):
-
         with self.client as c:
             c.post(
                 "/create",
@@ -427,7 +425,7 @@ class BudgetTestCase(IhatemoneyTestCase):
         # a bill or displaying the balance
         result = self.client.get("/raclette/")
         self.assertNotIn(
-            (f"/raclette/members/{fred_id}/delete"), result.data.decode("utf-8")
+            f"/raclette/members/{fred_id}/delete", result.data.decode("utf-8")
         )
 
         result = self.client.get("/raclette/add")
@@ -1170,6 +1168,36 @@ class BudgetTestCase(IhatemoneyTestCase):
         transactions = project.get_transactions_to_settle_bill()
         assert len(transactions) == 0
 
+    def test_settle_all_debts(self):
+        self.post_project("raclette")
+
+        # add participants
+        self.client.post("/raclette/members/add", data={"name": "zorglub"})
+        self.client.post("/raclette/members/add", data={"name": "fred"})
+        self.client.post("/raclette/members/add", data={"name": "tata"})
+
+        self.client.post(
+            "/raclette/add",
+            data={
+                "date": "2011-08-10",
+                "what": "fromage à raclette",
+                "payer": 1,
+                "payed_for": [1, 2, 3],
+                "amount": "30.0",
+            },
+        )
+
+        project = self.get_project("raclette")
+        transactions = project.get_transactions_to_settle_bill()
+        assert len(transactions) == 2
+
+        self.client.post(
+            "/raclette/settle_all_debts",
+            data={},
+        )
+
+        transactions = project.get_transactions_to_settle_bill()
+        assert len(transactions) == 0
 
     def test_settle(self):
         self.post_project("raclette")
@@ -1404,7 +1432,6 @@ class BudgetTestCase(IhatemoneyTestCase):
         self.assertEqual(member, None)
 
     def test_currency_switch(self):
-
         # A project should be editable
         self.post_project("raclette")
 
@@ -1531,7 +1558,6 @@ class BudgetTestCase(IhatemoneyTestCase):
         self.assertEqual(self.get_project("raclette").default_currency, "USD")
 
     def test_currency_switch_to_bill_currency(self):
-
         # Default currency is 'XXX', but we should start from a project with a currency
         self.post_project("raclette", default_currency="USD")
 
@@ -1565,7 +1591,6 @@ class BudgetTestCase(IhatemoneyTestCase):
         assert bill.converted_amount == bill.amount
 
     def test_currency_switch_to_no_currency(self):
-
         # Default currency is 'XXX', but we should start from a project with a currency
         self.post_project("raclette", default_currency="USD")
 
@@ -1637,7 +1662,6 @@ class BudgetTestCase(IhatemoneyTestCase):
         assert "No bills" in resp.data.decode("utf-8")
 
     def test_decimals_on_weighted_members_list(self):
-
         self.post_project("raclette")
 
         # add three users with different weights

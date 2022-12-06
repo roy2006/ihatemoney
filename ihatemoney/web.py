@@ -476,8 +476,8 @@ def import_project():
                 if len(currencies - {CurrencyConverter.no_currency}) >= 2:
                     raise ValueError(
                         _(
-                            "Cannot add bills in multiple currencies to a project without default "
-                            "currency"
+                            "Cannot add bills in multiple currencies to a project"
+                            " without default currency"
                         )
                     )
                 # Strip currency from bills (since it's the same for every bill)
@@ -584,7 +584,7 @@ def invite():
             # send the email
             message_body = render_localized_template("invitation_mail")
             message_title = _(
-                "You have been invited to share your " "expenses for %(project)s",
+                "You have been invited to share your expenses for %(project)s",
                 project=g.project.name,
             )
             msg = Message(
@@ -598,7 +598,8 @@ def invite():
                 return redirect(url_for(".list_bills"))
             else:
                 flash_email_error(
-                    "Sorry, there was an error while trying to send the invitation emails."
+                    "Sorry, there was an error while trying to send the invitation"
+                    " emails."
                 )
                 # Fall-through: we stay on the same page and display the form again
 
@@ -766,6 +767,7 @@ def delete_bill(bill_id):
 
     return redirect(url_for(".list_bills"))
 
+
 @main.route("/<project_id>/settle_debt", methods=["POST"])
 def settle_debt():
     # Used for CSRF validation
@@ -774,18 +776,45 @@ def settle_debt():
         flash(format_form_errors(form, _("Error deleting bill")), category="danger")
         return redirect(url_for(".settle_bill"))
 
-    ower_id = int(request.form.get("ower_id"))   # type: ignore
+    ower_id = int(request.form.get("ower_id"))  # type: ignore
     receiver_id = request.form.get("receiver_id")
-    amount = float(request.form.get("amount"))   # type: ignore
-    form = get_billform_for(g.project, set_default=False)
+    amount = float(request.form.get("amount"))  # type: ignore
 
     bill_owers = Person.query.get_by_ids([receiver_id], g.project)
 
-    settlement_bill = Bill(amount=amount,  payer_id = ower_id, owers = bill_owers, what = "Settle Debt")
+    settlement_bill = Bill(
+        amount=amount, payer_id=ower_id, owers=bill_owers, what="Settle Debt"
+    )
     db.session.add(settlement_bill)
     db.session.commit()
 
     return redirect(url_for(".settle_bill"))
+
+
+@main.route("/<project_id>/settle_all_debts", methods=["POST"])
+def settle_all_debts():
+    # Used for CSRF validation
+    form = EmptyForm()
+    if not form.validate():
+        flash(format_form_errors(form, _("Error deleting bill")), category="danger")
+        return redirect(url_for(".settle_bill"))
+
+    transactions = g.project.get_transactions_to_settle_bill()
+    for tx in transactions:
+        ower = tx["ower"].id
+        receiver_id = tx["receiver"].id
+        bill_owers = Person.query.get_by_ids([receiver_id], g.project)
+        amount = tx["amount"]
+
+        settlement_bill = Bill(
+            amount=amount, payer_id=ower, owers=bill_owers, what="Settle Debt"
+        )
+        db.session.add(settlement_bill)
+
+    db.session.commit()
+
+    return redirect(url_for(".settle_bill"))
+
 
 @main.route("/<project_id>/edit/<int:bill_id>", methods=["GET", "POST"])
 def edit_bill(bill_id):
@@ -826,8 +855,13 @@ def settle_bill():
 
     """Compute the sum each one have to pay to each other and display it"""
     bills = g.project.get_transactions_to_settle_bill()
-    return render_template("settle_bills.html", bills=bills, current_view="settle_bill", 
-        project_id = g.project.id, csrf_form = csrf_form)
+    return render_template(
+        "settle_bills.html",
+        bills=bills,
+        current_view="settle_bill",
+        project_id=g.project.id,
+        csrf_form=csrf_form,
+    )
 
 
 @main.route("/<project_id>/history")

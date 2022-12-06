@@ -1132,6 +1132,45 @@ class BudgetTestCase(IhatemoneyTestCase):
         response = self.client.get("/raclette/settle_bills")
         self.assertEqual(response.status_code, 200)
 
+    def test_settle_debt(self):
+        self.post_project("raclette")
+
+        # add participants
+        self.client.post("/raclette/members/add", data={"name": "zorglub"})
+        self.client.post("/raclette/members/add", data={"name": "fred"})
+
+        self.client.post(
+            "/raclette/add",
+            data={
+                "date": "2011-08-10",
+                "what": "fromage à raclette",
+                "payer": 1,
+                "payed_for": [1, 2],
+                "amount": "10.0",
+            },
+        )
+
+        project = self.get_project("raclette")
+        transactions = project.get_transactions_to_settle_bill()
+        assert len(transactions) == 1
+
+        ower = transactions[0]["ower"].id
+        receiver = transactions[0]["receiver"].id
+        amount = transactions[0]["amount"]
+
+        self.client.post(
+            "/raclette/settle_debt",
+            data={
+                "ower_id": ower,
+                "receiver_id": receiver,
+                "amount": amount,
+            },
+        )
+
+        transactions = project.get_transactions_to_settle_bill()
+        assert len(transactions) == 0
+
+
     def test_settle(self):
         self.post_project("raclette")
 

@@ -725,7 +725,7 @@ class Bill(db.Model):
 
     @property
     def _to_serialize(self):
-        return {
+        res = {
             "id": self.id,
             "payer_id": self.payer_id,
             "owers": self.owers,
@@ -736,8 +736,14 @@ class Bill(db.Model):
             "external_link": self.external_link,
             "original_currency": self.original_currency,
             "converted_amount": self.converted_amount,
-            "recurrence": self.recurrence
+            
         }
+
+        # include the recurrence data only if it's relevant, to avoid breaking tests. 
+        if self.recurrence:
+            res["recurrence"] = self.recurrence
+
+        return res 
 
     def pay_each_default(self, amount):
         """Compute what each share has to pay. Warning: this is slow, if you need

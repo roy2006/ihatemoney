@@ -338,7 +338,8 @@ class BillForm(FlaskForm):
         _("For whom?"), validators=[DataRequired()], coerce=int
     )
     recurring_schedule = SelectField(label="Repeat every", 
-            choices=[(0, "None"), (3, "3 Seconds"), (3600, "Hour"), (3600 * 24, "Day"), (3600 * 24 * 7, "Week")], coerce=int)
+            choices=[(0, "None"), (3, "3 Seconds"), (3600, "Hour"), (3600 * 24, "Day"), (3600 * 24 * 7, "Week")], 
+            coerce=int, default = 0)
 
     submit = SubmitField(_("Submit"))
     submit2 = SubmitField(_("Submit and add a new one"))

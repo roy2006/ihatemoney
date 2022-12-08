@@ -5,6 +5,7 @@ from flask_restful import Resource, abort
 from werkzeug.security import check_password_hash
 from wtforms.fields import BooleanField
 
+from ihatemoney import scheduled_bills
 from ihatemoney.currency_convertor import CurrencyConverter
 from ihatemoney.emails import send_creation_email
 from ihatemoney.forms import EditProjectForm, MemberForm, ProjectForm, get_billform_for
@@ -162,6 +163,10 @@ class BillsHandler(Resource):
             bill = form.export(project)
             db.session.add(bill)
             db.session.commit()
+
+            # if needed, create a recurring bill 
+            scheduled_bills.create_scheduled_job(bill.id, form.recurring_schedule.data)
+
             return bill.id, 201
         return form.errors, 400
 

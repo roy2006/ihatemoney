@@ -3,6 +3,7 @@ import decimal
 from re import match
 from types import SimpleNamespace
 
+from apscheduler.triggers.cron import CronTrigger
 import email_validator
 from flask import request
 from flask_babel import lazy_gettext as _
@@ -336,6 +337,9 @@ class BillForm(FlaskForm):
     payed_for = SelectMultipleField(
         _("For whom?"), validators=[DataRequired()], coerce=int
     )
+    recurring_schedule = SelectField(label="Repeat every", 
+            choices=[(0, "None"), (3, "3 Seconds"), (3600, "Hour"), (3600 * 24, "Day"), (3600 * 24 * 7, "Week")], coerce=int)
+
     submit = SubmitField(_("Submit"))
     submit2 = SubmitField(_("Submit and add a new one"))
 
@@ -349,6 +353,7 @@ class BillForm(FlaskForm):
             payer_id=self.payer.data,
             project_default_currency=project.default_currency,
             what=self.what.data,
+            recurrence=self.recurring_schedule.data
         )
 
     def save(self, bill, project):
@@ -359,6 +364,7 @@ class BillForm(FlaskForm):
         bill.date = self.date.data
         bill.owers = Person.query.get_by_ids(self.payed_for.data, project)
         bill.original_currency = self.original_currency.data
+        bill.recurrence = self.recurring_schedule.data
         bill.converted_amount = self.currency_helper.exchange_currency(
             bill.amount, bill.original_currency, project.default_currency
         )
@@ -370,6 +376,7 @@ class BillForm(FlaskForm):
         self.what.data = bill.what
         self.external_link.data = bill.external_link
         self.original_currency.data = bill.original_currency
+        self.recurring_schedule.data = bill.recurrence
         self.date.data = bill.date
         self.payed_for.data = [int(ower.id) for ower in bill.owers]
 

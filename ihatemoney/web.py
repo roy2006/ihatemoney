@@ -31,6 +31,7 @@ from flask_babel import gettext as _
 from flask_mail import Message
 import qrcode
 import qrcode.image.svg
+
 from sqlalchemy_continuum import Operation
 from werkzeug.exceptions import NotFound
 from werkzeug.security import check_password_hash, generate_password_hash
@@ -66,6 +67,7 @@ from ihatemoney.utils import (
     render_localized_template,
     send_email,
 )
+from ihatemoney import scheduled_bills
 
 main = Blueprint("main", __name__)
 
@@ -726,6 +728,7 @@ def edit_member(member_id):
     return render_template("edit_member.html", form=form, edit=True)
 
 
+
 @main.route("/<project_id>/add", methods=["GET", "POST"])
 def add_bill():
     form = get_billform_for(g.project)
@@ -735,8 +738,12 @@ def add_bill():
             session["last_selected_payer"] = form.payer.data
             session.update()
 
-            db.session.add(form.export(g.project))
+            new_bill = form.export(g.project)
+            db.session.add(new_bill)
             db.session.commit()
+
+            # if needed - create a scheduled job for this bill 
+            scheduled_bills.create_scheduled_job(new_bill.id, new_bill.recurrence)
 
             flash(_("The bill has been added"))
 
@@ -760,6 +767,8 @@ def delete_bill(bill_id):
     bill = Bill.query.get(g.project, bill_id)
     if not bill:
         return redirect(url_for(".list_bills"))
+
+    scheduled_bills.remove_scheduled_job(bill.id)
 
     db.session.delete(bill)
     db.session.commit()
@@ -835,7 +844,6 @@ def settle_all_debts():
 
     return redirect(url_for(".settle_bill"))
 
-
 @main.route("/<project_id>/edit/<int:bill_id>", methods=["GET", "POST"])
 def edit_bill(bill_id):
     # FIXME: Test this bill belongs to this project !
@@ -850,6 +858,12 @@ def edit_bill(bill_id):
         db.session.commit()
 
         flash(_("The bill has been modified"))
+        # if there's a scheduled job for this bill - cancel it. 
+        scheduled_bills.remove_scheduled_job(bill.id)
+
+        # if needed, schedule a new job 
+        scheduled_bills.create_scheduled_job(bill.id, form.recurring_schedule.data)
+
         return redirect(url_for(".list_bills"))
 
     if not form.errors:

@@ -4,6 +4,7 @@ import warnings
 
 from babel.dates import LOCALTZ
 from flask import Flask, g, render_template, request, session
+from flask_apscheduler import APScheduler
 from flask_babel import Babel, format_currency
 from flask_mail import Mail
 from flask_migrate import Migrate, stamp, upgrade
@@ -180,6 +181,12 @@ def create_app(
     mail = Mail()
     mail.init_app(app)
     app.mail = mail
+
+    # initialize scheduler
+    scheduler = APScheduler()
+    scheduler.init_app(app)
+    scheduler.start()
+    app.scheduler = scheduler 
 
     # Jinja filters
     app.jinja_env.globals["static_include"] = static_include

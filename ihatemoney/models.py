@@ -635,7 +635,6 @@ billowers = db.Table(
     sqlite_autoincrement=True,
 )
 
-
 class Bill(db.Model):
     class BillQuery(BaseQuery):
         def get(self, project, id):
@@ -674,6 +673,7 @@ class Bill(db.Model):
     creation_date = db.Column(db.Date, default=datetime.datetime.now)
     what = db.Column(db.UnicodeText)
     external_link = db.Column(db.UnicodeText)
+    recurrence = db.Column(db.Integer, nullable = True)
 
     original_currency = db.Column(db.String(3))
     converted_amount = db.Column(db.Float)
@@ -692,6 +692,7 @@ class Bill(db.Model):
         payer_id: int = None,
         project_default_currency: str = "",
         what: str = "",
+        recurrence: int = None, 
     ):
         super().__init__()
         self.amount = amount
@@ -701,19 +702,24 @@ class Bill(db.Model):
         self.owers = owers
         self.payer_id = payer_id
         self.what = what
+        self.recurrence = recurrence
         self.converted_amount = self.currency_helper.exchange_currency(
             self.amount, self.original_currency, project_default_currency
         )
 
-    def duplicate(self):
+    def duplicate(self, what_str_comment = "(duplicated)"):
+        new_what = self.what
+        if what_str_comment:
+            new_what = new_what + " " + what_str_comment
+
         dup_bill = Bill(
             amount=self.amount,
             external_link=self.external_link,
             original_currency=self.original_currency,
             owers=self.owers.copy(),
             payer_id=self.payer_id,
-            what=self.what + " (duplicated)",
-            project_default_currency=g.project.default_currency,
+            what=new_what, 
+            recurrence=self.recurrence
         )
         return dup_bill
 
@@ -730,6 +736,7 @@ class Bill(db.Model):
             "external_link": self.external_link,
             "original_currency": self.original_currency,
             "converted_amount": self.converted_amount,
+            "recurrence": self.recurrence
         }
 
     def pay_each_default(self, amount):

@@ -119,6 +119,9 @@
                         title="{{ _('Added on %(date)s', date=bill.creation_date|dateformat("long") if bill.creation_date else bill.date|dateformat("long")) }}">
                         {{ bill.date }}
                     </span>
+                    {% if bill.recurrence -%}
+                    <i class="icon high after-text">{{ static_include("images/schedule-icon.svg") | safe }}</i>
+                    {%- endif %}
                 </td>
                 <td>{{ bill.payer }}</td>
                 <td>{{ bill.what }}</td>

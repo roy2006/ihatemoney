@@ -164,7 +164,7 @@ class BillsHandler(Resource):
             db.session.add(bill)
             db.session.commit()
 
-            # if needed, create a recurring bill 
+            # if needed, create a recurring bill
             scheduled_bills.create_scheduled_job(bill.id, form.recurring_schedule.data)
 
             return bill.id, 201

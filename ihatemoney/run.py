@@ -186,7 +186,7 @@ def create_app(
     scheduler = APScheduler()
     scheduler.init_app(app)
     scheduler.start()
-    app.scheduler = scheduler 
+    app.scheduler = scheduler
 
     # Jinja filters
     app.jinja_env.globals["static_include"] = static_include

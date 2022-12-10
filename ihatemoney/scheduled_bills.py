@@ -1,15 +1,10 @@
 from typing import Optional
 
-from apscheduler.jobstores.sqlalchemy import SQLAlchemyJobStore
 from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.schedulers.base import BaseScheduler
 from apscheduler.triggers.interval import IntervalTrigger
 
 from ihatemoney.models import Bill, db
-
-
-def dummy_job():
-    print("in dummy_job")
 
 
 class SchduledBills(object):
@@ -55,22 +50,9 @@ class SchduledBills(object):
             id=job_name,
         )
 
-        SchduledBills._scheduler.add_job(dummy_job, trigger=trigger)
-
-    @staticmethod
-    def _job_stores(config):
-        sqlite_url = config.get("SQLALCHEMY_DATABASE_URI")
-        # for testing - don't use database when running tests, or the tests fail
-        if sqlite_url.endswith("/"):
-            return {}
-        else:
-            return {"default": SQLAlchemyJobStore(sqlite_url)}
-
     @staticmethod
     def start(app):
-        jobstores = SchduledBills._job_stores(app.config)
-
-        scheduler = BackgroundScheduler(jobstores=jobstores)
+        scheduler = BackgroundScheduler()
         SchduledBills._app = app
         SchduledBills._scheduler = scheduler
         scheduler.start()

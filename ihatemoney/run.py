@@ -4,7 +4,6 @@ import warnings
 
 from babel.dates import LOCALTZ
 from flask import Flask, g, render_template, request, session
-from flask_apscheduler import APScheduler
 from flask_babel import Babel, format_currency
 from flask_mail import Mail
 from flask_migrate import Migrate, stamp, upgrade
@@ -18,6 +17,7 @@ from ihatemoney import default_settings
 from ihatemoney.api.v1 import api as apiv1
 from ihatemoney.currency_convertor import CurrencyConverter
 from ihatemoney.models import db
+from ihatemoney.scheduled_bills import SchduledBills
 from ihatemoney.utils import (
     IhmJSONEncoder,
     PrefixedWSGI,
@@ -183,10 +183,7 @@ def create_app(
     app.mail = mail
 
     # initialize scheduler
-    scheduler = APScheduler()
-    scheduler.init_app(app)
-    scheduler.start()
-    app.scheduler = scheduler
+    SchduledBills.start(app)
 
     # Jinja filters
     app.jinja_env.globals["static_include"] = static_include

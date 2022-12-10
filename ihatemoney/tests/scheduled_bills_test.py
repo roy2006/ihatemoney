@@ -14,12 +14,11 @@ def allow_1_sec_schedule():
     return recurring_schedule
 
 
+@patch(
+    "ihatemoney.forms.BillForm.recurring_schedule", new_callable=allow_1_sec_schedule
+)
 class ScheduledBillsTestCase(IhatemoneyTestCase):
-    @patch(
-        "ihatemoney.forms.BillForm.recurring_schedule",
-        new_callable=allow_1_sec_schedule,
-    )
-    def test_recurring_bill(self, recurring_schedule_mock):
+    def test_recurring_bill(self, _):
         self.post_project("raclette")
         # add two participants
         self.client.post("/raclette/members/add", data={"name": "zorglub"})
@@ -28,7 +27,7 @@ class ScheduledBillsTestCase(IhatemoneyTestCase):
         members_ids = [m.id for m in self.get_project("raclette").members]
 
         # test balance
-        self.client.post(
+        resp = self.client.post(
             "/raclette/add",
             data={
                 "date": "2011-08-10",
@@ -40,17 +39,15 @@ class ScheduledBillsTestCase(IhatemoneyTestCase):
             },
         )
 
+        assert resp.status_code == 302
+
         p = self.get_project("raclette")
         assert len(p.get_bills().all()) == 1
 
         time.sleep(1.5)
         assert len(p.get_bills().all()) > 1
 
-    @patch(
-        "ihatemoney.forms.BillForm.recurring_schedule",
-        new_callable=allow_1_sec_schedule,
-    )
-    def test_edit_bill_schedule(self, recurring_schedule_mock):
+    def test_edit_bill_schedule(self, _):
         self.post_project("raclette")
         # add two participants
         self.client.post("/raclette/members/add", data={"name": "zorglub"})
@@ -92,11 +89,7 @@ class ScheduledBillsTestCase(IhatemoneyTestCase):
         time.sleep(1.5)
         assert len(p.get_bills().all()) == 1
 
-    @patch(
-        "ihatemoney.forms.BillForm.recurring_schedule",
-        new_callable=allow_1_sec_schedule,
-    )
-    def test_delete_bill_schedule(self, recurring_schedule_mock):
+    def test_delete_bill_schedule(self, _):
         self.post_project("raclette")
         # add two participants
         self.client.post("/raclette/members/add", data={"name": "zorglub"})

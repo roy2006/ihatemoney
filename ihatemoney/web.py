@@ -35,7 +35,6 @@ from sqlalchemy_continuum import Operation
 from werkzeug.exceptions import NotFound
 from werkzeug.security import check_password_hash, generate_password_hash
 
-from ihatemoney import scheduled_bills
 from ihatemoney.currency_convertor import CurrencyConverter
 from ihatemoney.emails import send_creation_email
 from ihatemoney.forms import (
@@ -56,6 +55,7 @@ from ihatemoney.forms import (
 )
 from ihatemoney.history import get_history, get_history_queries, purge_history
 from ihatemoney.models import Bill, LoggingMode, Person, Project, db
+from ihatemoney.scheduled_bills import SchduledBills
 from ihatemoney.utils import (
     LoginThrottler,
     Redirect303,
@@ -741,7 +741,7 @@ def add_bill():
             db.session.commit()
 
             # if needed - create a scheduled job for this bill
-            scheduled_bills.create_scheduled_job(new_bill.id, new_bill.recurrence)
+            SchduledBills.create_scheduled_job(new_bill.id, new_bill.recurrence)
 
             flash(_("The bill has been added"))
 
@@ -766,7 +766,7 @@ def delete_bill(bill_id):
     if not bill:
         return redirect(url_for(".list_bills"))
 
-    scheduled_bills.remove_scheduled_job(bill.id)
+    SchduledBills.remove_scheduled_job(bill.id)
 
     db.session.delete(bill)
     db.session.commit()
@@ -858,10 +858,10 @@ def edit_bill(bill_id):
 
         flash(_("The bill has been modified"))
         # if there's a scheduled job for this bill - cancel it.
-        scheduled_bills.remove_scheduled_job(bill.id)
+        SchduledBills.remove_scheduled_job(bill.id)
 
         # if needed, schedule a new job
-        scheduled_bills.create_scheduled_job(bill.id, form.recurring_schedule.data)
+        SchduledBills.create_scheduled_job(bill.id, form.recurring_schedule.data)
 
         return redirect(url_for(".list_bills"))
 

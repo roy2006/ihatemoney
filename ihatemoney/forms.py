@@ -341,6 +341,7 @@ class BillForm(FlaskForm):
         choices=[
             (0, "None"),
             (3, "3 Seconds"),
+            (60, "Minute"),
             (3600, "Hour"),
             (3600 * 24, "Day"),
             (3600 * 24 * 7, "Week"),

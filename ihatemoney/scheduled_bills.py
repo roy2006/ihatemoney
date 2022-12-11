@@ -8,10 +8,6 @@ from apscheduler.triggers.interval import IntervalTrigger
 from ihatemoney.models import Bill, db
 
 
-def dummy_job():
-    print("in dummy_job")
-
-
 class SchduledBills(object):
 
     _app = None  # Stores the flask application.
@@ -54,8 +50,6 @@ class SchduledBills(object):
             trigger=trigger,
             id=job_name,
         )
-
-        SchduledBills._scheduler.add_job(dummy_job, trigger=trigger)
 
     @staticmethod
     def _job_stores(config):
